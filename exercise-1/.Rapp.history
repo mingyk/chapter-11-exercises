@@ -1,0 +1,475 @@
+library(fueleconomy)
+View(vehicles)
+vehicles
+View(vehicles)
+#Min Kim, AD#
+#
+##################
+#### PART 1 ######
+##################
+#
+tas <- c("Phuong", "Yunwei", "Yubing", "Gavin", "Coco", "George", "Saurav", "YuYu")#
+#
+math_grades <- c(rnorm(8, mean = 3.6, sd = 0.4))#
+#
+spanish_grades <- c(rnorm(8, mean = 3.8, sd = 0.25))#
+#
+ta_grades <- data.frame(tas, math_grades, spanish_grades, stringsAsFactors = F)#
+#
+column_name <- paste(tas, collapse = ", ")#
+table_description <- paste("The grade data frame has", nrow(ta_grades), "rows and", ncol(ta_grades), "cols:", column_name)#
+print(table_description)#
+#
+new_colnames <- c("ta", "math_grade", "spanish_grade")#
+colnames(ta_grades) <- new_colnames#
+#
+better_at_math <- math_grades - spanish_grades > 0#
+ta_grades$better_at_math <- better_at_math#
+#
+filter_TA <- c(tas == "Gavin")#
+ta_grades[filter, ]#
+#
+num_better_at_math <- nrow(ta_grades[ta_grades["better_at_math"] == TRUE, ])#
+print(num_better_at_math)#
+#
+ta_grades[ta_grades["math_grade"] > 4, "math_grade"] <- 4.0#
+ta_grades[ta_grades["spanish_grade"] > 4, "spanish_grade"] <- 4.0#
+#
+getwd()#
+write.csv(ta_grades, "grade_data.csv", row.names = FALSE)#
+##################
+#### PART 2 ######
+##################
+#
+data(Titanic)#
+View(Titanic)#
+help(Titanic)#
+#
+is.data.frame(Titanic)#
+#
+titanic_df <- as.data.frame(Titanic, stringsAsFactors = FALSE)#
+#
+filter_child <- titanic_df[3] == "Child"#
+children <- titanic_df[filter, ]#
+#
+num_children <- sum(children["Freq"])#
+print(num_children)#
+#
+filter_loss <- titanic_df[titanic_df[4] == "No", ]#
+most_losses <- filter_loss[filter_loss[5] == max(filter_loss[5]), ]#
+print(most_losses)#
+#
+#takes in a string variable ticket_class#
+#creates a boolean matrix with ticket_class from titanic_df[1], applies it as a row to create a subframe "class"#
+#creates a boolean matrix with sex and age from class[2] and class[3] respectively, applies it as a row to create a subframe "men"/"rest"#
+#creates a boolean matrix with survive status from men[4]/rest[4], applies it as a row to create a subframe "survived_men"/"survived_rest"#
+#adds up all the numbers in Freq column of "survived_men"/"survived_rest", divides by all the numbers in Freq column of "men"/"rest" added, stores the rate into "rate_men"/"rate_rest"#
+#multiplies "rate_men"/"rate_rest" by 100, rounds it to the whole number, pastes % to it, and stores in "percent_men"/"percent_rest"#
+#stores the return string applied with "ticket_class", "percent_men", "percent_rest" variables#
+#returns the return string#
+calc_survival_rate <- function(ticket_class){ #
+	class <- titanic_df[titanic_df[1] == ticket_class, ] #
+	#ADULT MALE#
+	men <- class[class[2] == "Male" & class[3] == "Adult", ]  #
+	survived_men <- men[men[4] == "Yes", ] #
+	rate_men <- sum(survived_men["Freq"]) / + sum(men["Freq"])#
+	percent_men <- paste(round(rate_men * 100, 0), "%", sep = "")#
+	#THE REST#
+	rest <- class[class[2] == "Female" | class[3] == "Child", ]#
+	survived_rest <- rest[rest[4] == "Yes", ]#
+	rate_rest <- sum(survived_rest["Freq"]) / sum(rest["Freq"])	#
+	percent_rest <- paste(round(rate_rest * 100, 0), "%", sep = "")#
+	#RETURN#
+	return_string <- paste("Of", ticket_class, "," , percent_men, "of men survived and", percent_rest, "of women and children survived.")#
+	return(return_string)#
+}#
+#
+calc_survival_rate("1st")#
+calc_survival_rate("2nd")#
+calc_survival_rate("3rd")#
+#
+#1. Better the class, more the survival rate, especially in first and third classes#
+#2. Men's survival rate is significantly lower then those of the rest's throughout all three classes#
+##################
+#### PART 3 ######
+##################
+#
+#Period 1800-1970, main source: v7, by Mattias Lindgren#
+#Period 1970-2016, main source: IHME#
+#Period 2017-2099, main source: UN#
+#
+life_exp_df <- read.csv("data/life_expectancy_years.csv", stringsAsFactors = F)#
+View(life_exp_df)#
+#
+#takes in a vector "column"#
+#gets the mean of "column", ignores non-numeric values in the vector, returns the mean#
+get_col_mean <- function(column){#
+	return(mean(column, na.rm = TRUE))#
+}#
+#
+print(get_col_mean(life_exp_df[["X2018"]]))#
+#
+world_averages <- lapply(life_exp_df[-1], get_col_mean)#
+#
+world_change_18 <- world_averages$X2018 - world_averages$X1918#
+#
+life_exp_df["recent_change"] <- life_exp_df[["X2016"]] - life_exp_df[["X1996"]]#
+#
+num_small_gain <- nrow(life_exp_df[life_exp_df["recent_change"] < 1, ])#
+#
+most_improved <- life_exp_df[life_exp_df["recent_change"] == max(life_exp_df["recent_change"], na.rm = T), 1]#
+#
+#takes in a string variable "country" and a data frame "life_exp"#
+#stores the life expectancy of "country" in 1968 in "country_68"#
+#stores the life expectancy of "country" in 2018 in "country_18"#
+#returns the difference between "country_18" and "country_68"#
+get_country_change <- function(country, life_exp){#
+	country_68 <- life_exp[life_exp[1] == country, "X1968"]#
+	country_18 <- life_exp[life_exp[1] == country, "X2018"]#
+	return(country_18 - country_68)#
+}#
+#
+print(get_country_change("Haiti", life_exp_df))#
+#
+#takes in two string variables "name1", "name2" and a data frame "life_exp"#
+#creates a vector with country names#
+#creates a vector with each country's life expectancies in 2018#
+#creates a vector with each country's recent change#
+#returns the data frame of all the vectors in this function#
+compare_countries <- function(name1, name2, life_exp){#
+	country <- c(name1, name2)#
+	X2018 <- c(life_exp[life_exp[1] == name1, "X2018"], life_exp[life_exp[1] == name2, "X2018"])#
+	recent_change <- c(life_exp[life_exp[1] == name1, "recent_change"], life_exp[life_exp[1] == name2, "recent_change"])#
+	return(data.frame(country, X2018, recent_change, stringsAsFactors = F))#
+}#
+#
+us_vs_cuba <- compare_countries("United States", "Cuba", life_exp_df)#
+print(us_vs_cuba)
+tas <- c("Phuong", "Yunwei", "Yubing", "Gavin", "Coco", "George", "Saurav", "YuYu")
+math_grades <- c(rnorm(8, mean = 3.6, sd = 0.4))
+spanish_grades <- c(rnorm(8, mean = 3.8, sd = 0.25))
+ta_grades <- data.frame(tas, math_grades, spanish_grades, stringsAsFactors = F)
+column_name <- paste(tas, collapse = ", ")#
+table_description <- paste("The grade data frame has", nrow(ta_grades), "rows and", ncol(ta_grades), "cols:", column_name)#
+print(table_description)
+new_colnames <- c("ta", "math_grade", "spanish_grade")#
+colnames(ta_grades) <- new_colnames#
+#
+better_at_math <- math_grades - spanish_grades > 0#
+ta_grades$better_at_math <- better_at_math#
+#
+filter_TA <- c(tas == "Gavin")#
+ta_grades[filter, ]
+ta_grades
+filter_TA <- c(tas == "Gavin")
+filter_TA
+ta_grades[filter, ]
+ta_grades[ta_grades[filter], ]
+ta_grades[filter_TA, ]
+num_better_at_math <- nrow(ta_grades[ta_grades["better_at_math"] == TRUE, ])
+print(num_better_at_math)
+ta_grades[ta_grades["math_grade"] > 4, "math_grade"] <- 4.0
+ta_grades[ta_grades["spanish_grade"] > 4, "spanish_grade"] <- 4.0
+View(Titanic)
+titanic_df <- as.data.frame(Titanic, stringsAsFactors = FALSE)
+is.data.frame(Titanic)
+titanic_df <- as.data.frame(Titanic, stringsAsFactors = FALSE)
+filter_child <- titanic_df[3] == "Child"
+children <- titanic_df[filter_child, ]
+num_children <- sum(children["Freq"])
+print(num_children)
+life_exp_df <- read.csv("data/life_expectancy_years.csv", stringsAsFactors = F)
+View(life_exp_df)
+get_col_mean <- function(column){#
+	return(mean(column, na.rm = TRUE))#
+}
+print(get_col_mean(life_exp_df[["X2018"]]))
+#Min Kim, AD#
+#
+##################
+#### PART 1 ######
+##################
+#
+tas <- c("Phuong", "Yunwei", "Yubing", "Gavin", "Coco", "George", "Saurav", "YuYu")#
+#
+math_grades <- c(rnorm(8, mean = 3.6, sd = 0.4))#
+#
+spanish_grades <- c(rnorm(8, mean = 3.8, sd = 0.25))#
+#
+ta_grades <- data.frame(tas, math_grades, spanish_grades, stringsAsFactors = F)#
+#
+column_name <- paste(tas, collapse = ", ")#
+table_description <- paste("The grade data frame has", nrow(ta_grades), "rows and", ncol(ta_grades), "cols:", column_name)#
+print(table_description)#
+#
+new_colnames <- c("ta", "math_grade", "spanish_grade")#
+colnames(ta_grades) <- new_colnames#
+#
+better_at_math <- math_grades - spanish_grades > 0#
+ta_grades$better_at_math <- better_at_math#
+#
+filter_TA <- c(tas == "Gavin")#
+ta_grades[filter_TA, ]#
+#
+num_better_at_math <- nrow(ta_grades[ta_grades["better_at_math"] == TRUE, ])#
+print(num_better_at_math)#
+#
+ta_grades[ta_grades["math_grade"] > 4, "math_grade"] <- 4.0#
+ta_grades[ta_grades["spanish_grade"] > 4, "spanish_grade"] <- 4.0#
+#
+getwd()#
+write.csv(ta_grades, "grade_data.csv", row.names = FALSE)#
+##################
+#### PART 2 ######
+##################
+#
+data(Titanic)#
+View(Titanic)#
+help(Titanic)#
+#
+is.data.frame(Titanic)#
+#
+titanic_df <- as.data.frame(Titanic, stringsAsFactors = FALSE)#
+#
+filter_child <- titanic_df[3] == "Child"#
+children <- titanic_df[filter_child, ]#
+#
+num_children <- sum(children["Freq"])#
+print(num_children)#
+#
+filter_loss <- titanic_df[titanic_df[4] == "No", ]#
+most_losses <- filter_loss[filter_loss[5] == max(filter_loss[5]), ]#
+print(most_losses)#
+#
+#takes in a string variable ticket_class#
+#creates a boolean matrix with ticket_class from titanic_df[1], applies it as a row to create a subframe "class"#
+#creates a boolean matrix with sex and age from class[2] and class[3] respectively, applies it as a row to create a subframe "men"/"rest"#
+#creates a boolean matrix with survive status from men[4]/rest[4], applies it as a row to create a subframe "survived_men"/"survived_rest"#
+#adds up all the numbers in Freq column of "survived_men"/"survived_rest", divides by all the numbers in Freq column of "men"/"rest" added, stores the rate into "rate_men"/"rate_rest"#
+#multiplies "rate_men"/"rate_rest" by 100, rounds it to the whole number, pastes % to it, and stores in "percent_men"/"percent_rest"#
+#stores the return string applied with "ticket_class", "percent_men", "percent_rest" variables#
+#returns the return string#
+calc_survival_rate <- function(ticket_class){ #
+	class <- titanic_df[titanic_df[1] == ticket_class, ] #
+	#ADULT MALE#
+	men <- class[class[2] == "Male" & class[3] == "Adult", ]  #
+	survived_men <- men[men[4] == "Yes", ] #
+	rate_men <- sum(survived_men["Freq"]) / + sum(men["Freq"])#
+	percent_men <- paste(round(rate_men * 100, 0), "%", sep = "")#
+	#THE REST#
+	rest <- class[class[2] == "Female" | class[3] == "Child", ]#
+	survived_rest <- rest[rest[4] == "Yes", ]#
+	rate_rest <- sum(survived_rest["Freq"]) / sum(rest["Freq"])	#
+	percent_rest <- paste(round(rate_rest * 100, 0), "%", sep = "")#
+	#RETURN#
+	return_string <- paste("Of", ticket_class, "," , percent_men, "of men survived and", percent_rest, "of women and children survived.")#
+	return(return_string)#
+}#
+#
+calc_survival_rate("1st")#
+calc_survival_rate("2nd")#
+calc_survival_rate("3rd")#
+#
+#1. Better the class, more the survival rate, especially in first and third classes#
+#2. Men's survival rate is significantly lower then those of the rest's throughout all three classes#
+##################
+#### PART 3 ######
+##################
+#
+#Period 1800-1970, main source: v7, by Mattias Lindgren#
+#Period 1970-2016, main source: IHME#
+#Period 2017-2099, main source: UN#
+#
+life_exp_df <- read.csv("data/life_expectancy_years.csv", stringsAsFactors = F)#
+View(life_exp_df)#
+#
+#takes in a vector "column"#
+#gets the mean of "column", ignores non-numeric values in the vector, returns the mean#
+get_col_mean <- function(column){#
+	return(mean(column, na.rm = TRUE))#
+}#
+#
+print(get_col_mean(life_exp_df[["X2018"]]))#
+#
+world_averages <- lapply(life_exp_df[-1], get_col_mean)#
+#
+world_change_18 <- world_averages$X2018 - world_averages$X1918#
+#
+life_exp_df["recent_change"] <- life_exp_df[["X2016"]] - life_exp_df[["X1996"]]#
+#
+num_small_gain <- nrow(life_exp_df[life_exp_df["recent_change"] < 1, ])#
+#
+most_improved <- life_exp_df[life_exp_df["recent_change"] == max(life_exp_df["recent_change"], na.rm = T), 1]#
+#
+#takes in a string variable "country" and a data frame "life_exp"#
+#stores the life expectancy of "country" in 1968 in "country_68"#
+#stores the life expectancy of "country" in 2018 in "country_18"#
+#returns the difference between "country_18" and "country_68"#
+get_country_change <- function(country, life_exp){#
+	country_68 <- life_exp[life_exp[1] == country, "X1968"]#
+	country_18 <- life_exp[life_exp[1] == country, "X2018"]#
+	return(country_18 - country_68)#
+}#
+#
+print(get_country_change("Haiti", life_exp_df))#
+#
+#takes in two string variables "name1", "name2" and a data frame "life_exp"#
+#creates a vector with country names#
+#creates a vector with each country's life expectancies in 2018#
+#creates a vector with each country's recent change#
+#returns the data frame of all the vectors in this function#
+compare_countries <- function(name1, name2, life_exp){#
+	country <- c(name1, name2)#
+	X2018 <- c(life_exp[life_exp[1] == name1, "X2018"], life_exp[life_exp[1] == name2, "X2018"])#
+	recent_change <- c(life_exp[life_exp[1] == name1, "recent_change"], life_exp[life_exp[1] == name2, "recent_change"])#
+	return(data.frame(country, X2018, recent_change, stringsAsFactors = F))#
+}#
+#
+us_vs_cuba <- compare_countries("United States", "Cuba", life_exp_df)#
+print(us_vs_cuba)
+getwd()
+#Min Kim, AD#
+#
+##################
+#### PART 1 ######
+##################
+#
+tas <- c("Phuong", "Yunwei", "Yubing", "Gavin", "Coco", "George", "Saurav", "YuYu")#
+#
+math_grades <- c(rnorm(8, mean = 3.6, sd = 0.4))#
+#
+spanish_grades <- c(rnorm(8, mean = 3.8, sd = 0.25))#
+#
+ta_grades <- data.frame(tas, math_grades, spanish_grades, stringsAsFactors = F)#
+#
+column_name <- paste(tas, collapse = ", ")#
+table_description <- paste("The grade data frame has", nrow(ta_grades), "rows and", ncol(ta_grades), "cols:", column_name)#
+print(table_description)#
+#
+new_colnames <- c("ta", "math_grade", "spanish_grade")#
+colnames(ta_grades) <- new_colnames#
+#
+better_at_math <- math_grades - spanish_grades > 0#
+ta_grades$better_at_math <- better_at_math#
+#
+filter_TA <- c(tas == "Gavin")#
+ta_grades[filter_TA, ]#
+#
+num_better_at_math <- nrow(ta_grades[ta_grades["better_at_math"] == TRUE, ])#
+print(num_better_at_math)#
+#
+ta_grades[ta_grades["math_grade"] > 4, "math_grade"] <- 4.0#
+ta_grades[ta_grades["spanish_grade"] > 4, "spanish_grade"] <- 4.0#
+#
+getwd()#
+write.csv(ta_grades, "grade_data.csv", row.names = FALSE)#
+##################
+#### PART 2 ######
+##################
+#
+data(Titanic)#
+View(Titanic)#
+help(Titanic)#
+#
+is.data.frame(Titanic)#
+#
+titanic_df <- as.data.frame(Titanic, stringsAsFactors = FALSE)#
+#
+filter_child <- titanic_df[3] == "Child"#
+children <- titanic_df[filter_child, ]#
+#
+num_children <- sum(children["Freq"])#
+print(num_children)#
+#
+filter_loss <- titanic_df[titanic_df[4] == "No", ]#
+most_losses <- filter_loss[filter_loss[5] == max(filter_loss[5]), ]#
+print(most_losses)#
+#
+#takes in a string variable ticket_class#
+#creates a boolean matrix with ticket_class from titanic_df[1], applies it as a row to create a subframe "class"#
+#creates a boolean matrix with sex and age from class[2] and class[3] respectively, applies it as a row to create a subframe "men"/"rest"#
+#creates a boolean matrix with survive status from men[4]/rest[4], applies it as a row to create a subframe "survived_men"/"survived_rest"#
+#adds up all the numbers in Freq column of "survived_men"/"survived_rest", divides by all the numbers in Freq column of "men"/"rest" added, stores the rate into "rate_men"/"rate_rest"#
+#multiplies "rate_men"/"rate_rest" by 100, rounds it to the whole number, pastes % to it, and stores in "percent_men"/"percent_rest"#
+#stores the return string applied with "ticket_class", "percent_men", "percent_rest" variables#
+#returns the return string#
+calc_survival_rate <- function(ticket_class){ #
+	class <- titanic_df[titanic_df[1] == ticket_class, ] #
+	#ADULT MALE#
+	men <- class[class[2] == "Male" & class[3] == "Adult", ]  #
+	survived_men <- men[men[4] == "Yes", ] #
+	rate_men <- sum(survived_men["Freq"]) / + sum(men["Freq"])#
+	percent_men <- paste(round(rate_men * 100, 0), "%", sep = "")#
+	#THE REST#
+	rest <- class[class[2] == "Female" | class[3] == "Child", ]#
+	survived_rest <- rest[rest[4] == "Yes", ]#
+	rate_rest <- sum(survived_rest["Freq"]) / sum(rest["Freq"])	#
+	percent_rest <- paste(round(rate_rest * 100, 0), "%", sep = "")#
+	#RETURN#
+	return_string <- paste("Of", ticket_class, "," , percent_men, "of men survived and", percent_rest, "of women and children survived.")#
+	return(return_string)#
+}#
+#
+calc_survival_rate("1st")#
+calc_survival_rate("2nd")#
+calc_survival_rate("3rd")#
+#
+#1. Better the class, more the survival rate, especially in first and third classes#
+#2. Men's survival rate is significantly lower then those of the rest's throughout all three classes#
+##################
+#### PART 3 ######
+##################
+#
+#Period 1800-1970, main source: v7, by Mattias Lindgren#
+#Period 1970-2016, main source: IHME#
+#Period 2017-2099, main source: UN#
+#
+life_exp_df <- read.csv("data/life_expectancy_years.csv", stringsAsFactors = F)#
+View(life_exp_df)#
+#
+#takes in a vector "column"#
+#gets the mean of "column", ignores non-numeric values in the vector, returns the mean#
+get_col_mean <- function(column){#
+	return(mean(column, na.rm = TRUE))#
+}#
+#
+print(get_col_mean(life_exp_df[["X2018"]]))#
+#
+world_averages <- lapply(life_exp_df[-1], get_col_mean)#
+#
+world_change_18 <- world_averages$X2018 - world_averages$X1918#
+#
+life_exp_df["recent_change"] <- life_exp_df[["X2016"]] - life_exp_df[["X1996"]]#
+#
+num_small_gain <- nrow(life_exp_df[life_exp_df["recent_change"] < 1, ])#
+#
+most_improved <- life_exp_df[life_exp_df["recent_change"] == max(life_exp_df["recent_change"], na.rm = T), 1]#
+#
+#takes in a string variable "country" and a data frame "life_exp"#
+#stores the life expectancy of "country" in 1968 in "country_68"#
+#stores the life expectancy of "country" in 2018 in "country_18"#
+#returns the difference between "country_18" and "country_68"#
+get_country_change <- function(country, life_exp){#
+	country_68 <- life_exp[life_exp[1] == country, "X1968"]#
+	country_18 <- life_exp[life_exp[1] == country, "X2018"]#
+	return(country_18 - country_68)#
+}#
+#
+print(get_country_change("Haiti", life_exp_df))#
+#
+#takes in two string variables "name1", "name2" and a data frame "life_exp"#
+#creates a vector with country names#
+#creates a vector with each country's life expectancies in 2018#
+#creates a vector with each country's recent change#
+#returns the data frame of all the vectors in this function#
+compare_countries <- function(name1, name2, life_exp){#
+	country <- c(name1, name2)#
+	X2018 <- c(life_exp[life_exp[1] == name1, "X2018"], life_exp[life_exp[1] == name2, "X2018"])#
+	recent_change <- c(life_exp[life_exp[1] == name1, "recent_change"], life_exp[life_exp[1] == name2, "recent_change"])#
+	return(data.frame(country, X2018, recent_change, stringsAsFactors = F))#
+}#
+#
+us_vs_cuba <- compare_countries("United States", "Cuba", life_exp_df)#
+print(us_vs_cuba)
+life_exp_df <- read.csv("data/life_expectancy_years.csv", stringsAsFactors = F)
+getwd()
